@@ -14,6 +14,11 @@ NORMS <- load_norms("norms.csv")
 # exported site somewhere other than GitHub Pages.
 HOST_NAME <- "GitHub Pages (a service of GitHub, Inc.)"
 
+# Sources. The links open in a new tab and send no referrer; clicking one
+# leaves this app, which still sends nothing.
+TIPI_PAGE <- "https://gosling.psy.utexas.edu/scales-weve-developed/ten-item-personality-measure-tipi/"
+TIPI_DOI  <- "https://doi.org/10.1016/S0092-6566(03)00046-1"
+
 ANCHORS <- c("Disagree strongly", "Disagree moderately", "Disagree a little",
              "Neither agree nor disagree", "Agree a little", "Agree moderately",
              "Agree strongly")
@@ -149,13 +154,33 @@ ui <- fluidPage(
                     "a bell curve. That's least accurate at the extremes, so treat percentiles ",
                     "below the 5th or above the 95th as approximate."),
             tags$li(strong("About the norms."), " The comparison data come from about 278,000 ",
-                    "people aged 15 and older who took the TIPI online. In the full online ",
+                    "people aged 15 and older who took the TIPI online (Gosling, Rentfrow, & ",
+                    "Potter, 2014; see About the TIPI below). In the full online ",
                     "sample, 54% lived in the United States and about three-quarters ",
                     "identified as White, so the norms may fit some groups better than others.")
           )
         ),
         div(class = "actions",
             actionButton("reset", "Clear my answers and start over", class = "btn-default"))
+      )
+    ),
+    tags$section(
+      class = "card about", `aria-labelledby` = "about-tipi-h",
+      h2(id = "about-tipi-h", "About the TIPI"),
+      p("The Ten-Item Personality Inventory was developed by Samuel Gosling, Jason Rentfrow, ",
+        "and William Swann (2003). To learn more about it, visit ",
+        tags$a(href = TIPI_PAGE, target = "_blank", rel = "noopener noreferrer",
+               "Sam Gosling’s TIPI page", .noWS = "after"), "."),
+      h3("References"),
+      tags$ul(
+        class = "refs",
+        tags$li("Gosling, S. D., Rentfrow, P. J., & Swann, W. B., Jr. (2003). A very brief ",
+                "measure of the Big-Five personality domains. ",
+                tags$em("Journal of Research in Personality, 37", .noWS = "after"), "(6), 504–528. ",
+                tags$a(href = TIPI_DOI, target = "_blank", rel = "noopener noreferrer", TIPI_DOI)),
+        tags$li("Gosling, S. D., Rentfrow, P. J., & Potter, J. (2014). ",
+                tags$em("Norms for the Ten Item Personality Inventory", .noWS = "after"),
+                " [Unpublished data].")
       )
     ),
     tags$footer(p("Nothing you enter on this page is saved or sent anywhere."))

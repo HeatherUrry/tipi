@@ -98,6 +98,11 @@ details { margin-top: 18px; border-top: 1px solid var(--line); padding-top: 12px
 summary { cursor: pointer; font-weight: 650; color: var(--accent); }
 details li { margin: 6px 0; }
 
+.about p, .about li { font-size: .92rem; }
+.about a { color: var(--accent); }
+.refs { list-style: none; padding: 0; margin: 0; }
+.refs li { padding-left: 2em; text-indent: -2em; margin: 6px 0; overflow-wrap: anywhere; }
+
 footer { text-align: center; color: var(--muted); font-size: .85rem; margin-top: 28px; }
 
 @media (max-width: 560px) {

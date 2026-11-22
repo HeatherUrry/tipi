@@ -98,7 +98,9 @@ GitHub Pages limits (GitHub docs, "GitHub Pages limits"): sites up to 1 GB
 ## Load time and class use
 
 A student's first visit downloads about 40 MB (mostly the WebAssembly build of
-R), then R starts up in their browser. Served from this PC (so no download
+R), then R starts up in their browser. While that happens the page shows
+"Site loading… it'll take 20–30 seconds the first time." (set in `build.R`;
+it disappears as soon as the app appears). Served from this PC (so no download
 wait), it took about 15 seconds to appear; expect longer over Wi-Fi and on
 phones. 300 students is roughly 12 GB from GitHub, well
 under the monthly limit. However, 300 people downloading 40 MB on the same
