@@ -4,9 +4,19 @@ A web app where students complete the Ten-Item Personality Inventory (TIPI) and
 see their Big Five percentiles compared with published norms, as a spider chart,
 percentile strips, and a table.
 
-It's a Shiny app written in R and exported with **Shinylive**, so R runs inside
-each student's web browser (WebAssembly). The host only serves static files, so
-300 students at once is no more work for it than 3, and no data comes back to you.
+There are two versions, built from the same R code and wording:
+
+- **Shinylive version** (https://heatherurry.io/tipi/): a Shiny app written in R
+  and exported with Shinylive, so R itself runs inside each student's web browser
+  (WebAssembly) and draws the charts and the PDF. First visit downloads about 32 MB
+  and takes 20–30 seconds to start.
+- **Lightweight version** (https://heatherurry.io/tipi/lite/): R precomputes every
+  percentile, band, and group average ahead of time (`build_lite.R`), and a small
+  script in the browser looks results up and draws the same charts. About 130 KB;
+  loads in about a second. Its "Print or save my results" button uses the
+  browser's own print window.
+
+Both are static files, so the host does no computing and no data comes back to you.
 
 ## Folder contents
 
@@ -16,6 +26,11 @@ each student's web browser (WebAssembly). The host only serves static files, so
 | `app/tipi_scoring.R` | Scoring key, norm lookup, percentiles (used by the app and the tests) |
 | `app/tipi_plots.R` | Spider chart and percentile strips (base R graphics) |
 | `app/tipi_pdf.R` | The one-page "Save or print my results" PDF (base R graphics) |
+| `app/tipi_text.R` | All shared wording and page sections (privacy notice, instructions, notes, references, disclaimer), used by both versions |
+| `lite/lite_data.R` | Builds the lightweight page's lookup tables from `app/tipi_scoring.R` |
+| `lite/lite.js`, `lite/lite.css` | The lightweight page's browser code (lookups, SVG charts, printing) and base/print styles |
+| `build_lite.R` | Writes the lightweight page to `docs/lite/` (run automatically by `build.R`) |
+| `tests/test_lite.R` | Checks the lookup tables reproduce the Shinylive app's results exactly |
 | `app/norms.csv` | Norms typed in from `../TIPInormsFEMALE.pdf` and `../TIPInormsMALE.pdf` |
 | `app/www/` | Styles and small UI helpers (scrolling, focus, highlighting unanswered items, and the PDF download, which fetches the file through Shinylive's service worker because Chrome's built-in link downloads skip it) |
 | `tests/test_scoring.R` | Checks for the scoring and percentile math, including every norm value against the PDFs |
@@ -26,7 +41,10 @@ each student's web browser (WebAssembly). The host only serves static files, so
 
 - **Scoring key** (from `../tipi.pdf`): each trait is the mean of two items; reversed
   items are scored as 8 − response. Extraversion 1, 6R · Agreeableness 2R, 7 ·
-  Conscientiousness 3, 8R · Emotional Stability 4R, 9 · Openness 5, 10R.
+  Conscientiousness 3, 8R · Emotional Stability 4R, 9 · Openness to Experiences 5, 10R.
+- **Display**: traits are shown in OCEAN order with the TIPI's labels, Emotional
+  Stability in Neuroticism's place (with a note that it's N reversed). The norm
+  tables call the last trait "Openness"; `NORM_COLUMN` in `tipi_scoring.R` maps it.
   The tests confirm this matches `../excelscoreTIPI.xls` on 20,000 random response sets.
 - **Percentiles** = `pnorm(score, mean, sd)` for the student's norm group (by sex and
   age group), i.e., assuming a normal distribution within each group. Because TIPI

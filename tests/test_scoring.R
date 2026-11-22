@@ -33,7 +33,8 @@ female,51-60,mean,4135,4.18,5.43,5.35,4.66,5.42
 female,51-60,sd,4135,1.6,1.14,1.31,1.44,1.25
 female,61+,mean,885,4.21,5.5,5.39,4.84,5.39
 female,61+,sd,885,1.62,1.15,1.36,1.4,1.27", stringsAsFactors = FALSE)
-PUB_ORDER <- c("Extraversion", "Agreeableness", "Conscientiousness", "Emotional Stability", "Openness")
+PUB_ORDER <- c("Extraversion", "Agreeableness", "Conscientiousness", "Emotional Stability",
+               "Openness to Experiences")
 names(golden)[5:9] <- PUB_ORDER
 mismatch <- 0
 for (i in seq_len(nrow(golden))) for (t in TRAITS) {
@@ -48,14 +49,14 @@ ok(sum(unique(norms[c("sex", "age_group", "n")])$n) == 278000, "total norm n = 2
 ok(all(score_tipi(c(7, 1, 7, 1, 7, 1, 7, 1, 7, 1)) == 7), "max pattern scores 7 on every trait")
 ok(all(score_tipi(c(1, 7, 1, 7, 1, 7, 1, 7, 1, 7)) == 1), "min pattern scores 1 on every trait")
 ok(all(score_tipi(rep(4, 10)) == 4), "all-4 responses score 4")
-ok(identical(TRAITS, c("Openness", "Conscientiousness", "Extraversion", "Agreeableness",
+ok(identical(TRAITS, c("Openness to Experiences", "Conscientiousness", "Extraversion", "Agreeableness",
                        "Emotional Stability")) && identical(names(score_tipi(rep(4, 10))), TRAITS),
    "traits are displayed in OCEAN order, Emotional Stability in N's place")
 s1 <- score_tipi(c(7, 4, 4, 4, 4, 4, 4, 4, 4, 4))
 ok(s1[["Extraversion"]] == 5.5 && all(s1[names(s1) != "Extraversion"] == 4), "item 1 feeds Extraversion only")
 s10 <- score_tipi(c(4, 4, 4, 4, 4, 4, 4, 4, 4, 7))
-ok(s10[["Openness"]] == 2.5 && all(s10[names(s10) != "Openness"] == 4),
-   "item 10 is reversed and feeds Openness only")
+ok(s10[["Openness to Experiences"]] == 2.5 && all(s10[names(s10) != "Openness to Experiences"] == 4),
+   "item 10 is reversed and feeds Openness to Experiences only")
 s4 <- score_tipi(c(4, 4, 4, 7, 4, 4, 4, 4, 4, 4))
 ok(s4[["Emotional Stability"]] == 2.5 && all(s4[names(s4) != "Emotional Stability"] == 4),
    "item 4 is reversed and feeds Emotional Stability only")
@@ -70,7 +71,7 @@ excel_score <- function(b) {        # b[1..10] = cells B16..B25
     Agreeableness         = (rev(b[2]) + b[7]) / 2,   # A35 = A29(rev B17) + B22
     Conscientiousness     = (b[3] + rev(b[8])) / 2,   # A36 = B18 + A30(rev B23)
     `Emotional Stability` = (rev(b[4]) + b[9]) / 2,   # A37 = A31(rev B19) + B24
-    Openness              = (b[5] + rev(b[10])) / 2)  # A38 = B20 + A32(rev B25)
+    `Openness to Experiences` = (b[5] + rev(b[10])) / 2)  # A38 = B20 + A32(rev B25)
 }
 set.seed(1)
 resp <- matrix(sample(1:7, 10 * 20000, replace = TRUE), ncol = 10)
@@ -105,9 +106,9 @@ ok(abs(percentile(fem$mean, "Emotional Stability", comparison_group("female", "1
    "score at group mean = 50th percentile")
 
 # Group averages and descriptions
-ok(abs(group_mean("Openness", comparison_group("female", "61+", norms), norms) - 5.39) < 1e-12,
+ok(abs(group_mean("Openness to Experiences", comparison_group("female", "61+", norms), norms) - 5.39) < 1e-12,
    "group average for a single group = its mean")
-ok(abs(group_mean("Openness", comparison_group("none", "61+", norms), norms) - (5.39 + 5.37) / 2) < 1e-12,
+ok(abs(group_mean("Openness to Experiences", comparison_group("none", "61+", norms), norms) - (5.39 + 5.37) / 2) < 1e-12,
    "group average with gender averaged = mean of the F and M means")
 ok(grepl("based on 885 people", group_description("female", "61+", norms)) &&
    grepl("based on 1,790 people", group_description("other", "61+", norms)) &&

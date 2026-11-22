@@ -9,6 +9,7 @@
 
 stopifnot(file.exists("app/app.R"))
 source("tests/test_scoring.R")          # refuse to build if a scoring check fails
+source("tests/test_lite.R")             # ...or if the lightweight page's tables don't match
 
 # Shown under Shinylive's spinner while R loads in the browser, so students
 # see the privacy notice even before the app appears. Removed as soon as the
@@ -55,7 +56,6 @@ shinylive::export(
   wasm_packages = TRUE,
   template_params = list(
     title = "Your TIPI personality profile",
-    include_in_head = '<meta name="robots" content="noindex">',
     include_after_body = loading_note
   )
 )
@@ -115,5 +115,10 @@ if (!all(copied)) {
 unlink(tmp, recursive = TRUE)
 cat("\nBuilt docs/ (", round(sum(file.size(list.files("docs", recursive = TRUE,
     full.names = TRUE))) / 1e6, 1), "MB). App packages: ", paste(deps, collapse = ", "),
-    " (all base R or bundled).\nPreview with:\n",
-    "  Rscript -e \"httpuv::runStaticServer('docs', port = 7451)\"\n", sep = "")
+    " (all base R or bundled).\n", sep = "")
+
+# The lightweight page lives in docs/lite/ (rebuilt here because the copy
+# above replaced everything in docs/).
+source("build_lite.R")
+cat("Preview with:\n  Rscript -e \"httpuv::runStaticServer('docs', port = 7451)\"\n",
+    "  then open http://localhost:7451 (Shinylive) or http://localhost:7451/lite/ (lightweight)\n")

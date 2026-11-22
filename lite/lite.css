@@ -1,0 +1,48 @@
+/* Base styles for the lightweight page. The Shinylive app gets these from
+   Shiny's Bootstrap 3; this page loads only this file and the app's own
+   styles.css (copied in by build_lite.R), so nothing comes from elsewhere. */
+*, *::before, *::after { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; }
+body { margin: 0; }
+[hidden] { display: none !important; }
+h1, h2, h3 { line-height: 1.2; }
+p { margin: 0 0 10px; }
+.sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
+  overflow: hidden; clip: rect(0, 0, 0, 0); border: 0; white-space: nowrap; }
+
+.form-group { margin-bottom: 15px; }
+.control-label { display: inline-block; margin-bottom: 5px; }
+.form-control { display: block; width: 100%; padding: 6px 12px; color: #1d2433;
+  background: #fff; border: 1px solid #b8c1cf; font: inherit; }
+.form-control:focus { outline: 3px solid #174a78; outline-offset: 1px; }
+
+.btn { display: inline-block; padding: 8px 16px; font: inherit; font-weight: 600; line-height: 1.4;
+  text-align: center; cursor: pointer; border: 1px solid transparent; }
+.btn-primary { color: #fff; }
+.btn-default { color: #1d2433; background: #fff; border-color: #b8c1cf; }
+.btn-default:hover { background: #f1f3f6; }
+.btn:focus-visible { outline: 3px solid #174a78; outline-offset: 2px; }
+.tipi-item .radio-inline { cursor: pointer; }
+
+/* Charts (drawn by lite.js as SVG) */
+#radar svg, #strips svg { display: block; margin: 0 auto; overflow: visible; }
+#strips { margin-top: 6px; }
+
+/* Printing / saving as PDF: just the results, on white */
+.print-only { display: none; }
+@media print {
+  @page { size: auto; margin: 14mm 12mm; }
+  html, body { background: #fff !important; }
+  .wrap { max-width: none; padding: 0; }
+  .no-print, .privacy, header .lede, header .eyebrow, footer .credits { display: none !important; }
+  .print-only { display: block; }
+  .print-head { color: #5b6475; font-size: 12px; margin: 0 0 4px; }
+  header h1 { font-size: 22px; margin: 0 0 8px; }
+  .card { border: none; padding: 0; margin: 10px 0; }
+  .results h2 { display: none; }
+  .radar-box, #strips, .res-table, .ocean-note { break-inside: avoid; page-break-inside: avoid; }
+  details > summary { display: none; }
+  details > * { display: block; }
+  .about { break-before: auto; }
+  a { color: inherit; text-decoration: none; }
+}

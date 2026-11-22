@@ -121,6 +121,7 @@ details li { margin: 6px 0; }
 
 .about p, .about li { font-size: .92rem; }
 .about a { color: var(--accent); }
+.about .disclaimer { color: var(--muted); font-style: italic; }
 .refs { list-style: none; padding: 0; margin: 0; }
 .refs li { padding-left: 2em; text-indent: -2em; margin: 6px 0; overflow-wrap: anywhere; }
 

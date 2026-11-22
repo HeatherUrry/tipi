@@ -12,8 +12,11 @@ BAND_COLS <- c("#EEF1F5", "#DCE2EA", "#DCE2EA", "#EEF1F5")
 NARROW_LABELS <- c(
   Extraversion = "Extra-\nversion", Agreeableness = "Agree-\nableness",
   Conscientiousness = "Conscien-\ntiousness", `Emotional Stability` = "Emotional\nStability",
-  Openness = "Openness", Neuroticism = "Neuroti-\ncism"
+  `Openness to Experiences` = "Openness to\nExperiences", Neuroticism = "Neuroti-\ncism"
 )
+# Non-side positions on narrow screens (top, bottom): split long names sensibly.
+TWO_LINE_LABELS <- c(`Openness to Experiences` = "Openness to\nExperiences",
+                     `Emotional Stability` = "Emotional\nStability")
 
 # Spider (radar) chart of percentiles. 0 at the centre, 100 at the rim,
 # dashed ring = 50th percentile (the comparison group's average).
@@ -43,7 +46,9 @@ plot_radar <- function(prof) {
   labs  <- prof$trait
   if (W < 4.5) {
     side_lab <- NARROW_LABELS[labs]
-    labs <- ifelse(pos == "side" & !is.na(side_lab), side_lab, sub(" ", "\n", labs))
+    two_lab  <- TWO_LINE_LABELS[labs]
+    labs <- ifelse(pos == "side" & !is.na(side_lab), side_lab,
+            ifelse(!is.na(two_lab), two_lab, sub(" ", "\n", labs)))
   } else {
     # wider screens: still split two-word side labels (e.g., Emotional Stability)
     labs <- ifelse(pos == "side", sub(" ", "\n", labs), labs)

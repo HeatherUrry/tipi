@@ -19,7 +19,8 @@ wrap_to_width <- function(txt, cex, width = 1) {
   c(out, line)
 }
 
-write_results_pdf <- function(file, prof, group_text, date = Sys.Date(), ocean_note = NULL) {
+write_results_pdf <- function(file, prof, group_text, date = Sys.Date(), ocean_note = NULL,
+                              disclaimer = NULL) {
   # WinAnsi encoding covers the en dash, middle dot, curly apostrophe, and hyphen used here.
   grDevices::pdf(file, width = 8.5, height = 11, family = "Helvetica",
                  encoding = "WinAnsi.enc", title = "My TIPI results")
@@ -75,7 +76,7 @@ write_results_pdf <- function(file, prof, group_text, date = Sys.Date(), ocean_n
           "better: each trait has advantages and disadvantages at both ends."),
     paste("TIPI: Gosling, Rentfrow, & Swann (2003), Journal of Research in Personality, 37(6),",
           "504–528. Norms: Gosling, Rentfrow, & Potter (2014), unpublished data. Made at",
-          "heatherurry.io/tipi — nothing you entered was saved or sent.")
+          "heatherurry.io/tipi — nothing you entered was saved or sent.", disclaimer)
   )
   cex_notes <- 0.72
   lines <- unlist(lapply(pdf_text(paras), wrap_to_width, cex = cex_notes))

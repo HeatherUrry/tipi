@@ -4,9 +4,16 @@
 
 # Display order: OCEAN (Openness, Conscientiousness, Extraversion,
 # Agreeableness, Neuroticism), with the TIPI's Emotional Stability (the
-# reverse of Neuroticism) in N's place. Labels follow the TIPI publication.
-TRAITS <- c("Openness", "Conscientiousness", "Extraversion", "Agreeableness",
+# reverse of Neuroticism) in N's place. Labels follow the TIPI publication's
+# scoring key ("Openness to Experiences").
+TRAITS <- c("Openness to Experiences", "Conscientiousness", "Extraversion", "Agreeableness",
             "Emotional Stability")
+
+# Column in norms.csv for each trait (the norm tables say just "Openness").
+NORM_COLUMN <- c("Openness to Experiences" = "Openness", "Conscientiousness" = "Conscientiousness",
+                 "Extraversion" = "Extraversion", "Agreeableness" = "Agreeableness",
+                 "Emotional Stability" = "Emotional Stability")
+stopifnot(setequal(names(NORM_COLUMN), TRAITS))
 
 # Item wording, in order, from tipi.pdf ("I see myself as: ...").
 TIPI_ITEMS <- c(
@@ -24,13 +31,13 @@ TIPI_ITEMS <- c(
 
 # Scoring key from tipi.pdf ("R" = reverse-scored as 8 - response):
 #   Extraversion 1, 6R | Agreeableness 2R, 7 | Conscientiousness 3, 8R |
-#   Emotional Stability 4R, 9 | Openness 5, 10R
+#   Emotional Stability 4R, 9 | Openness to Experiences 5, 10R
 # Each trait score is the mean of its two items (range 1 to 7). The key is
 # listed in the publication's order and matched by trait name, so the
 # display order (TRAITS) can change without touching the scoring.
 TIPI_KEY <- data.frame(
   trait    = c("Extraversion", "Agreeableness", "Conscientiousness",
-               "Emotional Stability", "Openness"),
+               "Emotional Stability", "Openness to Experiences"),
   item     = c(1, 7, 3, 9, 5),
   item_rev = c(6, 2, 8, 4, 10)
 )
@@ -55,13 +62,13 @@ COLLEGE_AGE <- c("15-20", "21-30")   # used when age is not given
 # one row per sex x age group x trait.
 load_norms <- function(path = "norms.csv") {
   w <- utils::read.csv(path, check.names = FALSE, stringsAsFactors = FALSE)
-  stopifnot(all(c("sex", "age_group", "stat", "n", TRAITS) %in% names(w)))
+  stopifnot(all(c("sex", "age_group", "stat", "n", NORM_COLUMN) %in% names(w)))
   m <- w[w$stat == "mean", ]
   s <- w[w$stat == "sd", ]
   stopifnot(identical(m$sex, s$sex), identical(m$age_group, s$age_group))
   do.call(rbind, lapply(TRAITS, function(t) {
     data.frame(sex = m$sex, age_group = m$age_group, trait = t,
-               mean = m[[t]], sd = s[[t]], n = m$n)
+               mean = m[[NORM_COLUMN[[t]]]], sd = s[[NORM_COLUMN[[t]]]], n = m$n)
   }))
 }
 
