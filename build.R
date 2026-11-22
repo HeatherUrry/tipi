@@ -63,13 +63,34 @@ shinylive::export(
 # Guard: every R package the app uses must be base R or bundled in the
 # export. Otherwise Shinylive would quietly download it from repo.r-wasm.org
 # in each student's browser, which would contact a third-party server.
+# An entry in packages/metadata.rds counts only if Shinylive actually copied
+# files for it (it writes an entry with no files when a package can't be
+# found or is too large, and only warns). Every listed entry is checked, which
+# covers dependencies of dependencies too.
+missing_packages <- function(deps, base_pkgs, library_pkgs, extra) {
+  has_files <- vapply(extra, function(e) length(e$assets) > 0 && !is.null(e$path), logical(1))
+  names_of  <- function(x) vapply(x, function(e) as.character(e$name), "")
+  bundled   <- c(base_pkgs, library_pkgs, names_of(extra[has_files]))
+  unique(c(setdiff(deps, bundled), names_of(extra[!has_files])))
+}
+# Self-check the guard on simulated cases, so a broken guard can't pass silently.
+stopifnot(
+  identical(missing_packages("shiny", "stats", "shiny", list()), character(0)),
+  identical(missing_packages("ggplot2", "stats", "shiny", list()), "ggplot2"),
+  identical(missing_packages("ggplot2", "stats", "shiny",
+                             list(list(name = "ggplot2", assets = list()))), "ggplot2"),
+  identical(missing_packages("ggplot2", "stats", "shiny",
+                             list(list(name = "ggplot2", path = "packages/ggplot2/library.data",
+                                       assets = list(list(filename = "library.data"))),
+                                  list(name = "scales", assets = list()))), "scales")
+)
+
 deps <- unique(renv::dependencies("app", quiet = TRUE, progress = FALSE)$Package)
 base_pkgs <- rownames(utils::installed.packages(priority = "base"))
 lib_files <- jsonlite::fromJSON(file.path(tmp, "shinylive/webr/library.js.metadata"))$files$filename
-bundled <- unique(vapply(strsplit(sub("^/", "", lib_files), "/"), `[`, "", 1))
+library_pkgs <- unique(vapply(strsplit(sub("^/", "", lib_files), "/"), `[`, "", 1))
 extra <- readRDS(file.path(tmp, "shinylive/webr/packages/metadata.rds"))
-bundled <- c(bundled, vapply(extra, function(e) e$name, ""))
-not_bundled <- setdiff(deps, c(base_pkgs, bundled))
+not_bundled <- missing_packages(deps, base_pkgs, library_pkgs, extra)
 if (length(not_bundled)) {
   unlink(tmp, recursive = TRUE)
   stop("These packages would be downloaded from a third-party server at run time: ",

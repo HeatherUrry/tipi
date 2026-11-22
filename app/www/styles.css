@@ -75,6 +75,9 @@ h3 { font-size: 1.1rem; font-weight: 700; margin: 26px 0 8px; }
    the chosen rating with a thick system-colored border instead. */
 @media (forced-colors: active) {
   .tipi-item input:checked + span .dot { border: 4px solid Highlight; font-weight: 800; }
+  /* background/box-shadow highlights vanish in forced colors; outline instead */
+  .tipi-item.missing { outline: 3px solid CanvasText; outline-offset: 2px; }
+  .field-missing select { outline: 3px solid CanvasText; }
 }
 /* Headings that receive focus programmatically (results, page title) */
 h1[tabindex="-1"]:focus, h2[tabindex="-1"]:focus { outline: none; }
@@ -109,7 +112,9 @@ h1[tabindex="-1"]:focus, h2[tabindex="-1"]:focus { outline: none; }
 .save .btn { font-weight: 650; padding: 10px 18px; }
 .save p { margin: 8px 0 0; }
 .save .save-status { font-weight: 600; color: var(--ink); }
-.save .save-status:empty { display: none; }
+/* Keep the status region in the page even when empty, so screen readers
+   announce the first message. */
+.save .save-status:empty { margin: 0; }
 details { margin-top: 18px; border-top: 1px solid var(--line); padding-top: 12px; }
 summary { cursor: pointer; font-weight: 650; color: var(--accent); }
 details li { margin: 6px 0; }
@@ -121,9 +126,11 @@ details li { margin: 6px 0; }
 
 footer p { margin: 4px 0; }
 footer .sep { margin: 0 8px; }
-footer .gh { display: inline-flex; align-items: center; gap: 6px; color: var(--muted); text-decoration: none; white-space: nowrap; }
+/* The credit text and the GitHub link are ordinary inline text so both sit on
+   the same baseline; the icon is nudged down to rest on that baseline. */
+footer .gh { color: var(--muted); text-decoration: none; white-space: nowrap; }
 footer .gh:hover, footer .gh:focus-visible { color: var(--ink); text-decoration: underline; }
-footer .gh svg { width: 16px; height: 16px; fill: currentColor; flex: none; }
+footer .gh svg { width: 1.05em; height: 1.05em; fill: currentColor; vertical-align: -0.15em; margin-right: 5px; }
 
 footer { text-align: center; color: var(--muted); font-size: .85rem; margin-top: 28px; }
 

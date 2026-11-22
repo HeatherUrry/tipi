@@ -50,7 +50,10 @@ document.addEventListener("click", function (e) {
   a.setAttribute("aria-busy", "true");
   var status = document.getElementById("save-status");
   if (status) status.textContent = "Creating your PDF…";
-  fetch(a.href)
+  // Give up after 30 s rather than leaving the button busy forever.
+  var ctrl = window.AbortController ? new AbortController() : null;
+  var timer = ctrl ? setTimeout(function () { ctrl.abort(); }, 30000) : null;
+  fetch(a.href, ctrl ? { signal: ctrl.signal } : {})
     .then(function (resp) {
       if (!resp.ok) throw new Error("HTTP " + resp.status);
       var cd = resp.headers.get("content-disposition") || "";
@@ -75,10 +78,20 @@ document.addEventListener("click", function (e) {
         "Sorry, the PDF couldn’t be created. Please try again, or take a screenshot of your results.";
     })
     .then(function () {
+      if (timer) clearTimeout(timer);
       delete a.dataset.busy;
       a.removeAttribute("aria-busy");
     });
 }, true);
+
+// A "Your PDF is ready" message refers to the answers at that moment; clear it
+// when anything changes or the form is cleared.
+function clearSaveStatus() {
+  var s = document.getElementById("save-status");
+  if (s) s.textContent = "";
+}
+$(document).on("change", ".tipi-item input, #age, #gender", clearSaveStatus);
+$(document).on("click", "#reset", clearSaveStatus);
 
 // Clear the highlight as soon as something is answered.
 $(document).on("change", ".tipi-item input", function () {

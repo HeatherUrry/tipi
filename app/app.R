@@ -55,7 +55,8 @@ OCEAN_NOTE <- paste0(
 # A link that opens in a new tab and tells screen-reader users so.
 ext_link <- function(href, ..., class = NULL) {
   tags$a(href = href, target = "_blank", rel = "noopener noreferrer", class = class, ...,
-         tags$span(class = "sr-only", " (opens in a new tab)"), .noWS = "after")
+         tags$span(class = "sr-only", " (opens in a new tab)", .noWS = "before"),
+         .noWS = c("after", "before-end"))
 }
 
 # "a", "a and b", "a, b, and c"
@@ -257,8 +258,8 @@ ui <- fluidPage(
 )
 
 server <- function(input, output, session) {
-  shown    <- reactiveVal(FALSE)
-  problems <- reactiveVal(NULL)
+  shown <- reactiveVal(FALSE)
+  tried <- reactiveVal(FALSE)   # clicked "See my results" with something missing
 
   answers <- reactive({
     vapply(1:10, function(i) {
@@ -280,20 +281,19 @@ server <- function(input, output, session) {
       fields = as.list(c(if (!nzchar(input$age)) "age", if (!nzchar(input$gender)) "gender"))
     ))
     if (!complete()) {
-      problems(current_message())
+      tried(TRUE)
       return()
     }
-    problems(NULL)
+    tried(FALSE)
     shown(TRUE)
     session$sendCustomMessage("scroll_to", "results")
   })
 
-  # Once everything is answered, the "Please answer..." message goes away.
-  observe({ if (complete()) problems(NULL) })
-
+  # The "Please answer..." message updates as answers come in and disappears
+  # once everything is answered.
   output$problems <- renderUI({
-    req(problems())
-    div(class = "alert-box", role = "alert", problems())
+    req(tried(), !complete())
+    div(class = "alert-box", role = "status", current_message())
   })
 
   results <- reactive({
@@ -382,7 +382,7 @@ server <- function(input, output, session) {
     for (i in 1:10) updateRadioButtons(session, paste0("q", i), selected = character(0))
     updateSelectInput(session, "age", selected = "")
     updateSelectInput(session, "gender", selected = "")
-    problems(NULL)
+    tried(FALSE)
     shown(FALSE)
     session$sendCustomMessage("mark_missing", list(items = list(), fields = list()))
     session$sendCustomMessage("scroll_to", "top")

@@ -44,6 +44,9 @@ plot_radar <- function(prof) {
   if (W < 4.5) {
     side_lab <- NARROW_LABELS[labs]
     labs <- ifelse(pos == "side" & !is.na(side_lab), side_lab, sub(" ", "\n", labs))
+  } else {
+    # wider screens: still split two-word side labels (e.g., Emotional Stability)
+    labs <- ifelse(pos == "side", sub(" ", "\n", labs), labs)
   }
   labs  <- unname(labs)
   nl    <- lengths(regmatches(labs, gregexpr("\n", labs))) + 1
@@ -56,7 +59,7 @@ plot_radar <- function(prof) {
     # half-width X so every label's left and right edges fit inside [-X, X]
     need_r <- ifelse(lx > 0, lx / pmax(1 - 2 * (1 - hadj) * Lin / W, 0.05), 0)
     need_l <- ifelse(lx < 0, -lx / pmax(1 - 2 * hadj * Lin / W, 0.05), 0)
-    X <- max(1.12, need_r, need_l) + 0.03
+    X <- max(1.12, need_r, need_l) + 0.06
     Lu <- Lin * 2 * X / W                              # label widths in user units
     b  <- which(pos == "bottom")
     gap <- if (length(b) == 2) {
@@ -86,15 +89,37 @@ plot_radar <- function(prof) {
 
   # Line height from the font size (strheight() under-reports in the browser
   # build of R on high-density screens).
-  lh_in <- 1.3 * cex * par("ps") / 72
-  lh    <- lh_in * 2 * X / W                           # one text line, user units
-  # vertical placement of the name block (nl lines) and the percentile line
-  name_top <- ifelse(pos == "top", r_lab + (nl + 1) * lh,
-              ifelse(pos == "side", ly + nl * lh, ly + 0.15 * lh))
-  y_name   <- name_top - nl * lh / 2
-  y_pct    <- name_top - nl * lh - lh / 2
-  plot.window(xlim = c(-X, X),
-              ylim = c(min(y_pct) - 0.6 * lh, max(name_top) + 0.1 * lh), asp = 1)
+  # (par("cex") is the device's base text scale, e.g., < 1 inside layout()).
+  lh_in <- 1.3 * cex * par("cex") * par("ps") / 72
+  H     <- par("pin")[2]                               # plot height, inches
+  # Vertical placement of the name block (nl lines) and the percentile line,
+  # for a given line height in user units.
+  place <- function(lh) {
+    name_top <- ifelse(pos == "top", r_lab + (nl + 1) * lh,
+                ifelse(pos == "side", ly + nl * lh, ly + 0.15 * lh))
+    y_pct <- name_top - nl * lh - lh / 2
+    list(y_name = name_top - nl * lh / 2, y_pct = y_pct,
+         lo = min(y_pct) - 0.6 * lh, hi = max(name_top) + 0.1 * lh)
+  }
+  # Scale s = user units per inch (same both ways, so circles stay round).
+  # Width needs s >= 2X/W; height needs s >= (content height)/H, and the
+  # content height itself grows with s (text lines are a fixed size in
+  # inches). Iterate to the smallest s that satisfies both, so labels never
+  # overlap whether the plot is limited by its width (screen) or its height
+  # (the short, wide panel in the PDF).
+  s <- 2 * X / W
+  for (iter in 1:20) {
+    pl <- place(lh_in * s)
+    s_new <- max(2 * X / W, (pl$hi - pl$lo) / H)
+    if (abs(s_new - s) < 1e-9) break
+    s <- s_new
+  }
+  lh <- lh_in * s
+  pl <- place(lh)
+  y_name <- pl$y_name; y_pct <- pl$y_pct
+  mid <- (pl$hi + pl$lo) / 2
+  plot.window(xlim = c(-1, 1) * s * W / 2, ylim = mid + c(-1, 1) * s * H / 2,
+              xaxs = "i", yaxs = "i", asp = 1)
 
   for (r in c(0.25, 0.75, 1)) polygon(r * cos(ang), r * sin(ang), border = GRID, lwd = 1)
   segments(0, 0, cos(ang), sin(ang), col = GRID)
@@ -107,7 +132,7 @@ plot_radar <- function(prof) {
   a  <- (ang[1] + ang[2]) / 2
   rr <- if (W < 4.5) c(0.5, 1) else c(0.25, 0.5, 0.75, 1)
   d  <- rr * cos(pi / k) + 0.07
-  text(d * cos(a), d * sin(a), format(rr * 100), col = MUTED, cex = 0.72 * cex)
+  text(d * cos(a), d * sin(a), as.character(rr * 100), col = MUTED, cex = 0.72 * cex)
 
   polygon(v * cos(ang), v * sin(ang), col = adjustcolor(ACCENT, 0.22), border = ACCENT, lwd = 3)
   points(v * cos(ang), v * sin(ang), pch = 21, bg = ACCENT, col = "white", cex = 1.7, lwd = 1.5)

@@ -131,7 +131,9 @@ ordinal <- function(x) {
 # Whole-number percentile to show, kept consistent with the band: a value
 # just under a cutoff (e.g., 15.7, which is "Low") shows as 15, not 16, so
 # the displayed number never contradicts the band (Low <= 15, Medium low
-# 16-49, Medium high 50-83, High >= 84). Moves the number by at most 1.
+# 16-49, Medium high 50-83, High >= 84). Moves the number by at most 1 from
+# ordinary rounding (the tests confirm every reachable result stays within 1
+# of the exact percentile).
 display_percentile <- function(p) {
   r <- floor(p + 0.5)                       # round half up
   band <- band_label(p)

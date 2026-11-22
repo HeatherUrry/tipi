@@ -17,7 +17,7 @@ each student's web browser (WebAssembly). The host only serves static files, so
 | `app/tipi_plots.R` | Spider chart and percentile strips (base R graphics) |
 | `app/tipi_pdf.R` | The one-page "Save or print my results" PDF (base R graphics) |
 | `app/norms.csv` | Norms typed in from `../TIPInormsFEMALE.pdf` and `../TIPInormsMALE.pdf` |
-| `app/www/` | Styles and small UI helpers (scrolling, focus, highlighting unanswered items) |
+| `app/www/` | Styles and small UI helpers (scrolling, focus, highlighting unanswered items, and the PDF download, which fetches the file through Shinylive's service worker because Chrome's built-in link downloads skip it) |
 | `tests/test_scoring.R` | Checks for the scoring and percentile math, including every norm value against the PDFs |
 | `build.R` | Runs the tests, exports the site, checks that no R package would be fetched from another server, then replaces `docs/` |
 | `docs/` | The finished website. This folder is what gets published |
@@ -110,6 +110,8 @@ To update the live app, from this folder:
 ```powershell
 & "C:\Program Files\R\R-4.6.1\bin\Rscript.exe" build.R
 ```
+
+In Git Bash (in Windows PowerShell 5.1, use `;` instead of `&&`):
 
 ```bash
 git status            # check that only app/, docs/, tests/, and README-type files changed
