@@ -3,8 +3,17 @@
 ACCENT    <- "#1F5F99"
 INK       <- "#1D2433"
 MUTED     <- "#5B6475"
-GRID      <- "#D5DBE4"
-BAND_COLS <- c("#EEF1F5", "#E2E7EE", "#E2E7EE", "#EEF1F5")
+GRID      <- "#9AA4B2"
+BAND_COLS <- c("#EEF1F5", "#DCE2EA", "#DCE2EA", "#EEF1F5")
+
+# Two-line versions of trait names for narrow screens. Side labels on the
+# spider chart need the most horizontal room, so long single words are
+# hyphenated there.
+NARROW_LABELS <- c(
+  Extraversion = "Extra-\nversion", Agreeableness = "Agree-\nableness",
+  Conscientiousness = "Conscien-\ntiousness", `Emotional Stability` = "Emotional\nStability",
+  Openness = "Openness", Neuroticism = "Neuroti-\ncism"
+)
 
 # Spider (radar) chart of percentiles. 0 at the centre, 100 at the rim,
 # dashed ring = 50th percentile (the comparison group's average).
@@ -25,13 +34,19 @@ plot_radar <- function(prof) {
   # labels lean outward) that keeps the web reasonably big, measuring text
   # on the actual graphics device so it works on any screen.
   W     <- par("pin")[1]                               # plot width, inches
-  # On narrow screens, wrap two-word trait names onto two lines.
-  labs  <- if (W < 4.5) sub(" ", "\n", prof$trait) else prof$trait
-  nl    <- lengths(regmatches(labs, gregexpr("\n", labs))) + 1
   r_lab <- 1.1
   lx    <- r_lab * cos(ang)
   ly    <- r_lab * sin(ang)
   pos   <- ifelse(sin(ang) > 0.9, "top", ifelse(sin(ang) < -0.5, "bottom", "side"))
+  # On narrow screens, put trait names on two lines: two-word names split at
+  # the space; long side labels are hyphenated (they limit the web's size).
+  labs  <- prof$trait
+  if (W < 4.5) {
+    side_lab <- NARROW_LABELS[labs]
+    labs <- ifelse(pos == "side" & !is.na(side_lab), side_lab, sub(" ", "\n", labs))
+  }
+  labs  <- unname(labs)
+  nl    <- lengths(regmatches(labs, gregexpr("\n", labs))) + 1
   layout_for <- function(cex, lean) {
     Lin  <- pmax(strwidth(labs, units = "inches", cex = cex, font = 2),
                  strwidth(pct,        units = "inches", cex = cex, font = 2))
@@ -85,10 +100,14 @@ plot_radar <- function(prof) {
   segments(0, 0, cos(ang), sin(ang), col = GRID)
   polygon(0.5 * cos(ang), 0.5 * sin(ang), border = MUTED, lty = 2, lwd = 1.6)
 
-  # ring labels along the gap between the first two spokes
-  a <- (ang[1] + ang[2]) / 2
-  text(c(0.25, 0.5, 0.75, 1) * cos(a), c(0.25, 0.5, 0.75, 1) * sin(a),
-       c("25", "50", "75", "100"), col = MUTED, cex = 0.72 * cex)
+  # Ring labels in the gap between the first two spokes. Each ring is a
+  # pentagon, so along that line its edge is at r * cos(pi / k), not r; put
+  # each label just outside its own ring's edge. Narrow screens show 50 and
+  # 100 only, so the small labels don't crowd each other.
+  a  <- (ang[1] + ang[2]) / 2
+  rr <- if (W < 4.5) c(0.5, 1) else c(0.25, 0.5, 0.75, 1)
+  d  <- rr * cos(pi / k) + 0.07
+  text(d * cos(a), d * sin(a), format(rr * 100), col = MUTED, cex = 0.72 * cex)
 
   polygon(v * cos(ang), v * sin(ang), col = adjustcolor(ACCENT, 0.22), border = ACCENT, lwd = 3)
   points(v * cos(ang), v * sin(ang), pch = 21, bg = ACCENT, col = "white", cex = 1.7, lwd = 1.5)
@@ -109,16 +128,29 @@ plot_strips <- function(prof) {
   op <- par(mar = c(2.6, 0.6, 0.4, 0.6), xpd = NA, family = "sans")
   on.exit(par(op))
   plot.new()
-  cex <- if (par("pin")[1] < 5) 0.85 else 1
+  W <- par("pin")[1]
+  cex <- if (W < 5) 0.85 else 1
   plot.window(xlim = c(0, 100), ylim = c(0.55, k + 0.55), xaxs = "i")
+
+  # Trait name (left) and percentile (right) share a line. On narrow screens
+  # drop the word "percentile", then shrink the text, until every pair fits.
+  pct <- format_percentile(prof$percentile)
+  fits <- function(lab, cex) {
+    all(strwidth(prof$trait, "inches", cex = cex, font = 2) +
+        strwidth(lab, "inches", cex = 0.95 * cex, font = 2) + 0.15 <= W)
+  }
+  lab <- paste(pct, "percentile")
+  if (!fits(lab, cex)) lab <- pct
+  while (!fits(lab, cex) && cex > 0.65) cex <- cex - 0.05
 
   h <- 0.13
   for (i in seq_len(k)) {
     rect(edges[-5], y[i] - h, edges[-1], y[i] + h, col = BAND_COLS, border = NA)
+    # band boundaries (16th and 84th) as ticks; dashed line at the 50th
+    segments(BAND_CUTS[c(1, 3)], y[i] - h, BAND_CUTS[c(1, 3)], y[i] + h, col = MUTED, lwd = 1)
     segments(50, y[i] - h - 0.04, 50, y[i] + h + 0.04, col = MUTED, lty = 2)
     text(0, y[i] + 0.34, prof$trait[i], adj = c(0, 0.5), font = 2, col = INK, cex = cex)
-    text(100, y[i] + 0.34, paste(format_percentile(prof$percentile[i]), "percentile"),
-         adj = c(1, 0.5), col = ACCENT, font = 2, cex = 0.95 * cex)
+    text(100, y[i] + 0.34, lab[i], adj = c(1, 0.5), col = ACCENT, font = 2, cex = 0.95 * cex)
     points(min(max(prof$percentile[i], 1), 99), y[i], pch = 21, bg = ACCENT, col = "white",
            cex = 2.1, lwd = 1.5)
   }

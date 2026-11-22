@@ -3,6 +3,17 @@
 .RData
 .Rproj.user/
 
+# Temporary export folder used by build.R
+docs_new/
+
+# Safeguard: this repo is public; keep source documents and personal files out
+*.pdf
+*.xls
+*.xlsx
+*.docx
+*.sav
+*.sps
+
 # OS clutter
 .DS_Store
 Thumbs.db

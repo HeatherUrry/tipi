@@ -120,8 +120,21 @@ ordinal <- function(x) {
   paste0(x, suffix)
 }
 
+# Whole-number percentile to show, kept consistent with the band: a value
+# just under a cutoff (e.g., 15.7, which is "Low") shows as 15, not 16, so
+# the displayed number never contradicts the band (Low <= 15, Medium low
+# 16-49, Medium high 50-83, High >= 84). Moves the number by at most 1.
+display_percentile <- function(p) {
+  r <- floor(p + 0.5)                       # round half up
+  band <- band_label(p)
+  lo <- c(Low = 0, `Medium low` = 16, `Medium high` = 50, High = 84)[band]
+  hi <- c(Low = 15, `Medium low` = 49, `Medium high` = 83, High = 100)[band]
+  unname(pmin(pmax(r, lo), hi))
+}
+
 format_percentile <- function(p) {
-  ifelse(p < 1, "below 1st", ifelse(p >= 99.5, "above 99th", ordinal(round(p))))
+  ifelse(p < 1, "below 1st",
+         ifelse(p >= 99.5, "above 99th", ordinal(display_percentile(p))))
 }
 
 age_text <- function(age_group) {
@@ -135,7 +148,8 @@ group_description <- function(gender, age_group, norms) {
   who <- switch(gender, female = "female participants", male = "male participants",
                 "participants")
   extra <- if (gender %in% c("female", "male")) "" else
-    " (your percentile is the average of the female and male norms)"
+    paste0(" (each percentile is the average of your percentile against the",
+           " female norms and your percentile against the male norms)")
   paste0(who, " ", age_text(age_group), extra,
          ", based on ", format(sum(g$n), big.mark = ","), " people")
 }

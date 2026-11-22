@@ -70,7 +70,14 @@ h3 { font-size: 1.1rem; font-weight: 700; margin: 26px 0 8px; }
 }
 .tipi-item .dot:hover { border-color: var(--accent); }
 .tipi-item input:checked + span .dot { background: var(--accent); border-color: var(--accent); color: #fff; }
-.tipi-item input:focus-visible + span .dot { outline: 3px solid #8db8e6; outline-offset: 2px; }
+.tipi-item input:focus-visible + span .dot { outline: 3px solid #174a78; outline-offset: 2px; }
+/* Windows High Contrast / forced colors: backgrounds are overridden, so mark
+   the chosen rating with a thick system-colored border instead. */
+@media (forced-colors: active) {
+  .tipi-item input:checked + span .dot { border: 4px solid Highlight; font-weight: 800; }
+}
+/* Headings that receive focus programmatically (results, page title) */
+h1[tabindex="-1"]:focus, h2[tabindex="-1"]:focus { outline: none; }
 .tipi-item .ends { display: flex; justify-content: space-between; max-width: 480px;
   font-size: .78rem; color: var(--muted); margin-top: 4px; }
 .tipi-item.missing { background: var(--warn-soft); box-shadow: inset 3px 0 0 var(--warn); }
@@ -92,8 +99,13 @@ h3 { font-size: 1.1rem; font-weight: 700; margin: 26px 0 8px; }
 .res-table thead th { font-size: .82rem; color: var(--muted); font-weight: 650; border-bottom: 2px solid var(--line); }
 .res-table .num { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
 .res-table .strong { font-weight: 700; color: var(--accent); }
-.res-table td.band-col { white-space: nowrap; }
-.res-table .meaning { font-weight: 400; font-size: .8rem; color: var(--muted); margin-top: 2px; }
+.res-table td.band { white-space: nowrap; }
+.meanings { margin: 14px 0 6px; font-size: .88rem; }
+.meanings dt { font-weight: 650; margin-top: 6px; }
+.meanings dd { margin: 0 0 0 0; color: var(--muted); }
+.save { margin: 22px 0 8px; padding: 14px 16px; border-radius: 10px; background: var(--accent-soft); }
+.save .btn { font-weight: 650; padding: 10px 18px; }
+.save p { margin: 8px 0 0; }
 details { margin-top: 18px; border-top: 1px solid var(--line); padding-top: 12px; }
 summary { cursor: pointer; font-weight: 650; color: var(--accent); }
 details li { margin: 6px 0; }
@@ -121,7 +133,7 @@ footer { text-align: center; color: var(--muted); font-size: .85rem; margin-top:
   .tipi-item .shiny-options-group { gap: 4px; }
   .res-table { font-size: .88rem; }
   .res-table th, .res-table td { padding: 8px 4px; }
-  .res-table thead th { font-size: .74rem; white-space: normal; }
-  .res-table tbody th { word-break: break-word; }
-  .res-table .band-col { display: none; }
+  .res-table thead th, .res-table thead th.num { font-size: .74rem; white-space: normal; }
+  .res-table .avg-col { display: none; }
+  .res-table td.band { white-space: normal; }
 }

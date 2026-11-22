@@ -15,10 +15,11 @@ each student's web browser (WebAssembly). The host only serves static files, so
 | `app/app.R` | The Shiny app: privacy notice, questions, results |
 | `app/tipi_scoring.R` | Scoring key, norm lookup, percentiles (used by the app and the tests) |
 | `app/tipi_plots.R` | Spider chart and percentile strips (base R graphics) |
+| `app/tipi_pdf.R` | The one-page "Save or print my results" PDF (base R graphics) |
 | `app/norms.csv` | Norms typed in from `../TIPInormsFEMALE.pdf` and `../TIPInormsMALE.pdf` |
-| `app/www/` | Styles and two small UI helpers (scroll, highlight unanswered items) |
-| `tests/test_scoring.R` | Checks for the scoring and percentile math |
-| `build.R` | Runs the tests, then exports the site to `docs/` |
+| `app/www/` | Styles and small UI helpers (scrolling, focus, highlighting unanswered items) |
+| `tests/test_scoring.R` | Checks for the scoring and percentile math, including every norm value against the PDFs |
+| `build.R` | Runs the tests, exports the site, checks that no R package would be fetched from another server, then replaces `docs/` |
 | `docs/` | The finished website. This folder is what gets published |
 
 ## How scoring works
@@ -28,14 +29,22 @@ each student's web browser (WebAssembly). The host only serves static files, so
   Conscientiousness 3, 8R · Emotional Stability 4R, 9 · Openness 5, 10R.
   The tests confirm this matches `../excelscoreTIPI.xls` on 20,000 random response sets.
 - **Percentiles** = `pnorm(score, mean, sd)` for the student's norm group (by sex and
-  age group), i.e., assuming a normal distribution within each group.
-- **Gender other than female/male, or not given**: the average of the female and male
-  percentiles for that age group.
+  age group), i.e., assuming a normal distribution within each group. Because TIPI
+  scores come in half-point steps, this works out to "% scoring below you, with
+  ties counted as half", which is how the app words it. The normal assumption is
+  least accurate near the ends of the 1–7 scale (e.g., a score of 7 can show as
+  only about the 88th–90th percentile).
+- **Gender other than female/male, or not given**: the average of the student's
+  percentile against the female norms and against the male norms (same age group).
+  This differs from averaging the norms' means and SDs by at most 0.7 percentile points.
 - **Age not given**: the 15–20 and 21–30 groups combined, weighted by sample size.
-- **Bands** (same as the Excel scorer): Low < 16th, Medium low 16th–50th,
-  Medium high 50th–84th, High > 84th percentile (mean ± 1 SD).
-- `norms.csv` was checked number-by-number against the text of both norm PDFs
-  (120 means/SDs and all 12 sample sizes match).
+- **Bands** (same as the Excel scorer): mean ± 1 SD, i.e., cutoffs at the 15.87th,
+  50th, and 84.13th percentiles. The displayed whole-number percentile is rounded
+  toward its band when it sits right at a cutoff (e.g., 15.7 shows as 15th, Low),
+  so the number and band never disagree: Low ≤ 15th, Medium low 16th–49th,
+  Medium high 50th–83rd, High ≥ 84th.
+- `norms.csv` is checked by the tests against values extracted from both norm PDFs
+  (all 120 means/SDs and 12 sample sizes).
 
 ## Privacy
 
@@ -51,8 +60,24 @@ store and Shinylive's cache were both empty.
 What the **host** does: GitHub Pages logs the IP address of every visitor for
 security purposes (GitHub's documentation, "About GitHub Pages" → "Data
 collection"). The app's privacy notice says so and states that using the app
-means consenting to that. If you host elsewhere, change `HOST_NAME` near the
-top of `app/app.R` and rebuild.
+means consenting to that; the same notice appears on the loading screen. The
+first request is logged before any page can show a notice, so also include the
+notice wherever you post the link (Canvas, syllabus). If you host elsewhere,
+change `HOST_NAME` near the top of `app/app.R` and the loading text in
+`build.R`, then rebuild.
+
+Keeping it that way:
+
+- Share the full **https://** link (the QR code uses it). The site has no HSTS
+  header, so a typed `http://` address makes one unencrypted request before
+  redirecting.
+- The app shares the `heatherurry.io` origin with the personal website. Don't add
+  analytics, embeds, or a site-wide service worker to that site.
+- `build.R` stops if the app would need an R package that isn't bundled (Shinylive
+  would otherwise download it from repo.r-wasm.org in students' browsers). After
+  upgrading the shinylive R package, re-run a network check of the built site.
+- Shinylive's code editor/terminal can still be opened with a special URL
+  parameter; that only lets a visitor run R in their own browser.
 
 ## Rebuild and preview on your computer
 
@@ -86,11 +111,15 @@ To update the live app, from this folder:
 & "C:\Program Files\R\R-4.6.1\bin\Rscript.exe" build.R
 ```
 
-```powershell
-git add -A; git commit -m "Update app"; git push
+```bash
+git status            # check that only app/, docs/, tests/, and README-type files changed
+git add -A && git commit -m "Update app" && git push
 ```
 
-Pages redeploys automatically within a few minutes.
+The repo is public, so check `git status` before committing; `.gitignore`
+blocks PDFs, spreadsheets, and Word files as a safeguard. Pages redeploys
+automatically within a few minutes, and browsers may show the old version for
+up to 10 minutes (check in a private window).
 
 GitHub Pages limits (GitHub docs, "GitHub Pages limits"): sites up to 1 GB
 (this one is about 69 MB) and a *soft* bandwidth limit of 100 GB per month.
@@ -127,4 +156,7 @@ a few minutes before you need it, or assign it before class.
 
 - Wording, instructions, privacy notice: `app/app.R`
 - Colors and layout: `app/www/styles.css`; chart colors at the top of `app/tipi_plots.R`
+- The downloadable PDF: `app/tipi_pdf.R`
+- The loading-screen text (including the privacy notice): `build.R`
+- Stop any local preview server before running `build.R` (it keeps files open)
 - Norms: `app/norms.csv` (keep the same columns), then run the tests via `build.R`
