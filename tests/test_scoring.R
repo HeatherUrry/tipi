@@ -1,41 +1,16 @@
-# Checks for app/tipi_scoring.R. Run from the tipi_app folder:
+# Checks for R/tipi_scoring.R. Run from the tipi_app folder:
 #   Rscript tests/test_scoring.R
-source("app/tipi_scoring.R")
-norms <- load_norms("app/norms.csv")
+source("R/tipi_scoring.R")
+norms <- load_norms("data/norms.csv")
 ok <- function(cond, msg) { if (!isTRUE(cond)) stop("FAILED: ", msg, call. = FALSE); cat("ok -", msg, "\n") }
 
 # ---- Norms table -------------------------------------------------------------
 # Golden values extracted from the text of TIPInormsMALE.pdf and
-# TIPInormsFEMALE.pdf (independently of app/norms.csv), in the column order
-# Extraversion, Agreeableness, Conscientiousness, Emotional Stability, Openness.
-golden <- utils::read.csv(text = "sex,age_group,stat,n,E,A,C,ES,O
-male,15-20,mean,54973,3.79,4.47,4.41,4.61,5.43
-male,15-20,sd,54973,1.55,1.22,1.39,1.47,1.17
-male,21-30,mean,40737,3.73,4.5,4.57,4.64,5.49
-male,21-30,sd,40737,1.54,1.2,1.39,1.46,1.13
-male,31-40,mean,14752,3.81,4.55,4.77,4.63,5.49
-male,31-40,sd,14752,1.54,1.21,1.35,1.42,1.12
-male,41-50,mean,7668,3.85,4.7,4.96,4.72,5.41
-male,41-50,sd,7668,1.54,1.18,1.35,1.39,1.17
-male,51-60,mean,3532,3.87,4.89,5.11,4.8,5.39
-male,51-60,sd,3532,1.54,1.18,1.31,1.38,1.2
-male,61+,mean,905,3.85,4.95,5.26,4.92,5.37
-male,61+,sd,905,1.49,1.17,1.3,1.34,1.26
-female,15-20,mean,79648,4.06,4.73,4.52,4.07,5.58
-female,15-20,sd,79648,1.58,1.22,1.42,1.46,1.1
-female,21-30,mean,46530,4.07,4.88,4.78,4.09,5.55
-female,21-30,sd,46530,1.61,1.19,1.41,1.45,1.12
-female,31-40,mean,15412,4.17,5.04,4.97,4.25,5.49
-female,31-40,sd,15412,1.64,1.19,1.41,1.45,1.18
-female,41-50,mean,8823,4.2,5.28,5.18,4.49,5.46
-female,41-50,sd,8823,1.64,1.17,1.36,1.45,1.2
-female,51-60,mean,4135,4.18,5.43,5.35,4.66,5.42
-female,51-60,sd,4135,1.6,1.14,1.31,1.44,1.25
-female,61+,mean,885,4.21,5.5,5.39,4.84,5.39
-female,61+,sd,885,1.62,1.15,1.36,1.4,1.27", stringsAsFactors = FALSE)
+# TIPInormsFEMALE.pdf (independently of data/norms.csv); see tests/golden_norms.csv.
+golden <- utils::read.csv("tests/golden_norms.csv", check.names = FALSE, stringsAsFactors = FALSE)
 PUB_ORDER <- c("Extraversion", "Agreeableness", "Conscientiousness", "Emotional Stability",
                "Openness to Experiences")
-names(golden)[5:9] <- PUB_ORDER
+stopifnot(identical(names(golden)[5:9], PUB_ORDER))
 mismatch <- 0
 for (i in seq_len(nrow(golden))) for (t in TRAITS) {
   row <- norms[norms$sex == golden$sex[i] & norms$age_group == golden$age_group[i] & norms$trait == t, ]

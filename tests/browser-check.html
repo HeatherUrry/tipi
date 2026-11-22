@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>TIPI browser check</title>
+<style>body { font: 16px/1.5 system-ui, sans-serif; margin: 2em; } .pass { color: #116329; } .fail { color: #a8261b; }</style>
+</head>
+<body>
+<h1>TIPI page: browser check of the scoring and lookup code</h1>
+<p>Runs the page's own code (<code>web/app.js</code>) with the built tables (<code>docs/data.js</code>).
+Open this file in a browser after running <code>build.R</code>. Nothing is sent anywhere.</p>
+<p id="result">Running&hellip;</p>
+<ul id="details"></ul>
+<script src="../docs/data.js"></script>
+<script src="../web/app.js"></script>
+<script>
+(function () {
+  var D = window.TIPI_DATA, T = window.TIPI, out = [], failures = [];
+  // Scoring key written independently from tipi.pdf (item, reversed item).
+  var SPEC = { "Extraversion": [1, 6], "Agreeableness": [7, 2], "Conscientiousness": [3, 8],
+               "Emotional Stability": [9, 4], "Openness to Experiences": [5, 10] };
+  var OCEAN = ["Openness to Experiences", "Conscientiousness", "Extraversion", "Agreeableness", "Emotional Stability"];
+  var genders = ["female", "male", "other", "none"];
+  var ages = ["15-20", "21-30", "31-40", "41-50", "51-60", "61+", "none"];
+
+  // Every answer set in which trait j gets answer pair (p + 11 j) mod 49: each
+  // trait sees all 49 (item, reversed item) pairs in every group, while the
+  // traits hold different pairs at the same time (catching any mix-up).
+  var sets = 0, results = 0;
+  genders.forEach(function (g) { ages.forEach(function (a) {
+    for (var p = 0; p < 49; p++) {
+      var answers = new Array(10), want = {};
+      OCEAN.forEach(function (t, j) {
+        var q = (p + 11 * j) % 49, x = Math.floor(q / 7) + 1, y = (q % 7) + 1;
+        answers[SPEC[t][0] - 1] = x;
+        answers[SPEC[t][1] - 1] = y;
+        want[t] = (x + 8 - y) / 2;
+      });
+      var res = T.lookup(answers, g, a);
+      sets++;
+      if (res.description !== D.groups[g + "|" + a].description) failures.push("description " + g + " " + a);
+      res.rows.forEach(function (r, j) {
+        results++;
+        var cell = D.groups[g + "|" + a].traits[r.trait], i = (want[r.trait] - 1) * 2;
+        if (r.trait !== OCEAN[j] || r.score !== want[r.trait] || r.pct !== cell.pct[i] ||
+            r.label !== cell.label[i] || r.band !== cell.band[i] || r.mean !== cell.mean) {
+          failures.push(g + " " + a + " " + r.trait + " answers " + answers.join(",") +
+                        ": got " + r.score + "/" + r.label + ", expected " + want[r.trait] + "/" + cell.label[i]);
+        }
+      });
+    }
+  }); });
+  out.push(sets + " answer sets across 28 comparison groups (" + results + " trait results): " +
+           "every trait saw all 49 answer pairs in every group");
+  var keyOk = D.key.length === 5 && D.key.every(function (k) {
+    return SPEC[k.trait] && SPEC[k.trait][0] === k.item && SPEC[k.trait][1] === k.item_rev; });
+  if (!keyOk) failures.push("data.js scoring key differs from tipi.pdf");
+  out.push("data.js scoring key matches tipi.pdf: " + keyOk);
+
+  var el = document.getElementById("result");
+  el.className = failures.length ? "fail" : "pass";
+  el.textContent = failures.length ? "FAILED: " + failures.length + " problem(s)" : "All checks passed.";
+  document.title = (failures.length ? "FAIL" : "PASS") + " - TIPI browser check";
+  out.concat(failures.slice(0, 20)).forEach(function (s) {
+    var li = document.createElement("li"); li.textContent = s; document.getElementById("details").appendChild(li);
+  });
+})();
+</script>
+</body>
+</html>

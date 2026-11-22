@@ -3,7 +3,7 @@
 .RData
 .Rproj.user/
 
-# Temporary export folder used by build.R
+# Temporary build folder used by build.R
 docs_new/
 
 # Safeguard: this repo is public; keep source documents and personal files out
