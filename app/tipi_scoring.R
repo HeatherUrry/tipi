@@ -2,8 +2,11 @@
 # Sourced by app.R and by tests/test_scoring.R.
 # Nothing in this file saves, sends, or stores any data.
 
-TRAITS <- c("Extraversion", "Agreeableness", "Conscientiousness",
-            "Emotional Stability", "Openness")
+# Display order: OCEAN (Openness, Conscientiousness, Extraversion,
+# Agreeableness, Neuroticism), with the TIPI's Emotional Stability (the
+# reverse of Neuroticism) in N's place. Labels follow the TIPI publication.
+TRAITS <- c("Openness", "Conscientiousness", "Extraversion", "Agreeableness",
+            "Emotional Stability")
 
 # Item wording, in order, from tipi.pdf ("I see myself as: ...").
 TIPI_ITEMS <- c(
@@ -22,19 +25,24 @@ TIPI_ITEMS <- c(
 # Scoring key from tipi.pdf ("R" = reverse-scored as 8 - response):
 #   Extraversion 1, 6R | Agreeableness 2R, 7 | Conscientiousness 3, 8R |
 #   Emotional Stability 4R, 9 | Openness 5, 10R
-# Each trait score is the mean of its two items (range 1 to 7).
+# Each trait score is the mean of its two items (range 1 to 7). The key is
+# listed in the publication's order and matched by trait name, so the
+# display order (TRAITS) can change without touching the scoring.
 TIPI_KEY <- data.frame(
-  trait    = TRAITS,
+  trait    = c("Extraversion", "Agreeableness", "Conscientiousness",
+               "Emotional Stability", "Openness"),
   item     = c(1, 7, 3, 9, 5),
   item_rev = c(6, 2, 8, 4, 10)
 )
+stopifnot(setequal(TIPI_KEY$trait, TRAITS))
 
 score_tipi <- function(responses) {
   r <- suppressWarnings(as.numeric(responses))
   if (length(r) != 10 || anyNA(r) || any(!r %in% 1:7)) {
     stop("score_tipi() needs 10 responses, each a whole number from 1 to 7.")
   }
-  stats::setNames((r[TIPI_KEY$item] + (8 - r[TIPI_KEY$item_rev])) / 2, TRAITS)
+  s <- stats::setNames((r[TIPI_KEY$item] + (8 - r[TIPI_KEY$item_rev])) / 2, TIPI_KEY$trait)
+  s[TRAITS]
 }
 
 # ---- Norms -----------------------------------------------------------------

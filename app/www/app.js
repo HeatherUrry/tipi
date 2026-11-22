@@ -33,6 +33,53 @@ $(document).on("shiny:connected", function () {
   });
 });
 
+// PDF download. Shiny's download link points at a URL that only exists inside
+// this browser (Shinylive's service worker answers it by running R). Chrome
+// doesn't send link-triggered downloads through the service worker, so it
+// would ask the web host instead and fail. Fetch the file ourselves (fetch
+// does go through the service worker), then save it from a local blob URL.
+// Nothing leaves the device. Capture phase so this runs before Shiny's own
+// handlers.
+document.addEventListener("click", function (e) {
+  var a = e.target.closest && e.target.closest("a.shiny-download-link");
+  if (!a) return;
+  e.preventDefault();
+  e.stopPropagation();
+  if (a.classList.contains("disabled") || !a.getAttribute("href") || a.dataset.busy) return;
+  a.dataset.busy = "1";
+  a.setAttribute("aria-busy", "true");
+  var status = document.getElementById("save-status");
+  if (status) status.textContent = "Creating your PDF…";
+  fetch(a.href)
+    .then(function (resp) {
+      if (!resp.ok) throw new Error("HTTP " + resp.status);
+      var cd = resp.headers.get("content-disposition") || "";
+      var m = cd.match(/filename="?([^";]+)"?/);
+      return resp.blob().then(function (blob) {
+        return { blob: blob, name: m ? m[1] : "my-tipi-results.pdf" };
+      });
+    })
+    .then(function (file) {
+      var url = URL.createObjectURL(new Blob([file.blob], { type: "application/pdf" }));
+      var tmp = document.createElement("a");
+      tmp.href = url;
+      tmp.download = file.name;
+      document.body.appendChild(tmp);
+      tmp.click();
+      tmp.remove();
+      setTimeout(function () { URL.revokeObjectURL(url); }, 60000);
+      if (status) status.textContent = "Your PDF is ready (" + file.name + ").";
+    })
+    .catch(function () {
+      if (status) status.textContent =
+        "Sorry, the PDF couldn’t be created. Please try again, or take a screenshot of your results.";
+    })
+    .then(function () {
+      delete a.dataset.busy;
+      a.removeAttribute("aria-busy");
+    });
+}, true);
+
 // Clear the highlight as soon as something is answered.
 $(document).on("change", ".tipi-item input", function () {
   $(this).closest(".tipi-item").removeClass("missing")

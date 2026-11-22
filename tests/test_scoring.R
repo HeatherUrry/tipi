@@ -33,7 +33,8 @@ female,51-60,mean,4135,4.18,5.43,5.35,4.66,5.42
 female,51-60,sd,4135,1.6,1.14,1.31,1.44,1.25
 female,61+,mean,885,4.21,5.5,5.39,4.84,5.39
 female,61+,sd,885,1.62,1.15,1.36,1.4,1.27", stringsAsFactors = FALSE)
-names(golden)[5:9] <- TRAITS
+PUB_ORDER <- c("Extraversion", "Agreeableness", "Conscientiousness", "Emotional Stability", "Openness")
+names(golden)[5:9] <- PUB_ORDER
 mismatch <- 0
 for (i in seq_len(nrow(golden))) for (t in TRAITS) {
   row <- norms[norms$sex == golden$sex[i] & norms$age_group == golden$age_group[i] & norms$trait == t, ]
@@ -47,10 +48,17 @@ ok(sum(unique(norms[c("sex", "age_group", "n")])$n) == 278000, "total norm n = 2
 ok(all(score_tipi(c(7, 1, 7, 1, 7, 1, 7, 1, 7, 1)) == 7), "max pattern scores 7 on every trait")
 ok(all(score_tipi(c(1, 7, 1, 7, 1, 7, 1, 7, 1, 7)) == 1), "min pattern scores 1 on every trait")
 ok(all(score_tipi(rep(4, 10)) == 4), "all-4 responses score 4")
-ok(identical(unname(score_tipi(c(7, 4, 4, 4, 4, 4, 4, 4, 4, 4))), c(5.5, 4, 4, 4, 4)),
-   "item 1 feeds Extraversion only")
-ok(identical(unname(score_tipi(c(4, 4, 4, 4, 4, 4, 4, 4, 4, 7))), c(4, 4, 4, 4, 2.5)),
+ok(identical(TRAITS, c("Openness", "Conscientiousness", "Extraversion", "Agreeableness",
+                       "Emotional Stability")) && identical(names(score_tipi(rep(4, 10))), TRAITS),
+   "traits are displayed in OCEAN order, Emotional Stability in N's place")
+s1 <- score_tipi(c(7, 4, 4, 4, 4, 4, 4, 4, 4, 4))
+ok(s1[["Extraversion"]] == 5.5 && all(s1[names(s1) != "Extraversion"] == 4), "item 1 feeds Extraversion only")
+s10 <- score_tipi(c(4, 4, 4, 4, 4, 4, 4, 4, 4, 7))
+ok(s10[["Openness"]] == 2.5 && all(s10[names(s10) != "Openness"] == 4),
    "item 10 is reversed and feeds Openness only")
+s4 <- score_tipi(c(4, 4, 4, 7, 4, 4, 4, 4, 4, 4))
+ok(s4[["Emotional Stability"]] == 2.5 && all(s4[names(s4) != "Emotional Stability"] == 4),
+   "item 4 is reversed and feeds Emotional Stability only")
 ok(inherits(try(score_tipi(c(rep(4, 9), NA)), silent = TRUE), "try-error"), "missing item is rejected")
 ok(inherits(try(score_tipi(c(rep(4, 9), 8)), silent = TRUE), "try-error"), "out-of-range item is rejected")
 
@@ -66,7 +74,7 @@ excel_score <- function(b) {        # b[1..10] = cells B16..B25
 }
 set.seed(1)
 resp <- matrix(sample(1:7, 10 * 20000, replace = TRUE), ncol = 10)
-same <- apply(resp, 1, function(r) isTRUE(all.equal(score_tipi(r), excel_score(r))))
+same <- apply(resp, 1, function(r) isTRUE(all.equal(score_tipi(r), excel_score(r)[TRAITS])))
 ok(all(same), "matches the Excel scorer on 20,000 random response sets")
 
 # ---- Percentiles ---------------------------------------------------------------
@@ -140,8 +148,9 @@ for (gen in GENDERS) for (age in AGES) for (t in TRAITS) for (s in seq(1, 7, by 
 ok(bad == 0, "all 1,820 reachable results: shown percentile within 1 point and consistent with band")
 
 prof <- tipi_profile(c(5, 2, 6, 3, 7, 4, 6, 2, 5, 1), "female", "15-20", norms)
-ok(identical(prof$trait, TRAITS) && all(prof$score == c(4.5, 6, 6, 5, 7)), "tipi_profile scores")
-ok(identical(prof$band, c("Medium high", "High", "High", "Medium high", "High")) &&
-   identical(format_percentile(prof$percentile), c("61st", "85th", "85th", "74th", "90th")),
+byname <- function(x) setNames(x, prof$trait)[PUB_ORDER]
+ok(identical(prof$trait, TRAITS) && all(byname(prof$score) == c(4.5, 6, 6, 5, 7)), "tipi_profile scores")
+ok(identical(unname(byname(prof$band)), c("Medium high", "High", "High", "Medium high", "High")) &&
+   identical(unname(byname(format_percentile(prof$percentile))), c("61st", "85th", "85th", "74th", "90th")),
    "tipi_profile percentiles and bands (worked example)")
 cat("\nAll checks passed.\n")

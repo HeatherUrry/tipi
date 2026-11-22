@@ -32,13 +32,25 @@ ANCHORS <- c("Disagree strongly", "Disagree moderately", "Disagree a little",
              "Neither agree nor disagree", "Agree a little", "Agree moderately",
              "Agree strongly")
 
+# What high and low scores mean, in the TIPI's own words (matched by name,
+# then put in display order).
 TRAIT_MEANING <- data.frame(
-  trait = TRAITS,
+  trait = c("Extraversion", "Agreeableness", "Conscientiousness",
+            "Emotional Stability", "Openness"),
   high  = c("extraverted, enthusiastic", "sympathetic, warm", "dependable, self-disciplined",
             "calm, emotionally stable", "open to new experiences, complex"),
   low   = c("reserved, quiet", "critical, quarrelsome", "disorganized, careless",
             "anxious, easily upset", "conventional, uncreative")
 )
+TRAIT_MEANING <- TRAIT_MEANING[match(TRAITS, TRAIT_MEANING$trait), ]
+stopifnot(identical(TRAIT_MEANING$trait, TRAITS))
+
+# Shown with the results (and in the PDF): why the order is OCEAN and why
+# Emotional Stability sits where Neuroticism usually goes.
+OCEAN_NOTE <- paste0(
+  "Traits are shown in OCEAN order. The TIPI measures Emotional Stability, the reverse ",
+  "of Neuroticism (the N in OCEAN), so it appears in N’s place: a high Emotional ",
+  "Stability score corresponds to low Neuroticism.")
 
 # A link that opens in a new tab and tells screen-reader users so.
 ext_link <- function(href, ..., class = NULL) {
@@ -169,6 +181,7 @@ ui <- fluidPage(
           p(class = "help small center",
             "Each point shows your percentile. The dashed ring is the 50th percentile ",
             "(the comparison group's average); the outer edge is 100."),
+          p(class = "ocean-note", OCEAN_NOTE),
           h3("Where you fall on each trait"),
           plotOutput("strips", height = "auto"),
           uiOutput("table"),
@@ -180,6 +193,7 @@ ui <- fluidPage(
           div(class = "save",
               downloadButton("save_pdf", "Save or print my results (PDF)",
                              class = "btn-primary", icon = NULL),
+              p(id = "save-status", class = "save-status", role = "status", `aria-live` = "polite"),
               p(class = "help small",
                 "The PDF is created on your device and goes straight to you; nothing is uploaded.")),
           p(class = "help small",
@@ -358,7 +372,8 @@ server <- function(input, output, session) {
   output$save_pdf <- downloadHandler(
     filename = function() "my-tipi-results.pdf",
     content = function(file) {
-      write_results_pdf(file, results(), group_description(input$gender, input$age, NORMS))
+      write_results_pdf(file, results(), group_description(input$gender, input$age, NORMS),
+                        ocean_note = OCEAN_NOTE)
     },
     contentType = "application/pdf"
   )
