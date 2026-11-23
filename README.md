@@ -19,7 +19,7 @@ of students can use it at once and nothing comes back to you.
 |---|---|
 | `R/tipi_scoring.R` | Scoring key, norm lookup, percentiles, bands, labels |
 | `R/tables.R` | Builds the lookup tables the page uses from `tipi_scoring.R` |
-| `R/tipi_text.R` | All wording and page sections (privacy notice, instructions, notes, references, disclaimer) |
+| `R/tipi_text.R` | Most wording and page sections (privacy notice, instructions, notes, references, disclaimer, footer); headings, buttons, and the page title are in `build.R`, and on-page messages and table headers in `web/app.js` |
 | `data/norms.csv` | Norms typed in from `../TIPInormsFEMALE.pdf` and `../TIPInormsMALE.pdf` |
 | `web/app.js` | The page's browser code: scoring, lookups, SVG charts, validation, printing |
 | `web/base.css`, `web/styles.css`, `web/print.css` | Base styles, the page's look, and the print/PDF layout |
@@ -47,8 +47,10 @@ of students can use it at once and nothing comes back to you.
   only about the 88th–90th percentile).
 - **Gender other than female/male, or not given**: the average of the student's
   percentile against the female norms and against the male norms (same age group).
-  This differs from averaging the norms' means and SDs by at most 0.7 percentile points.
+  This differs from averaging the norms' means and SDs by at most 0.72 percentile points.
 - **Age not given**: the 15–20 and 21–30 groups combined, weighted by sample size.
+  That is, the percentile is the sample-size-weighted average of the student's
+  percentiles in those two groups, not a percentile from a pooled mean and SD.
 - **Bands** (same as the Excel scorer): mean ± 1 SD, i.e., cutoffs at the 15.87th,
   50th, and 84.13th percentiles. The displayed whole-number percentile is rounded
   toward its band when it sits right at a cutoff (e.g., 15.7 shows as 15th, Low),
@@ -139,8 +141,15 @@ version's service worker from browsers that visited it.
 
 ## Changing things
 
-- Wording, instructions, privacy notice: `R/tipi_text.R`
-- Colors and layout: `web/styles.css`; chart colors near the top of `web/app.js`
-- Print/PDF layout: `web/print.css`
-- Norms: `data/norms.csv` (keep the same columns), then rebuild (the tests check it
-  against the PDF values in `tests/golden_norms.csv`)
+- Wording, instructions, privacy notice: `R/tipi_text.R` (headings and buttons:
+  `build.R`; messages: `web/app.js`). The comparison-group sentence comes from
+  `group_description()` in `R/tipi_scoring.R`, and both test files check it word for
+  word, so change them together.
+- Colors and layout: `web/styles.css` (phone rules at 560 px and 400 px); chart colors
+  near the top of `web/app.js` (charts switch to narrow layouts below 432 px and 480 px)
+- Print/PDF layout: `web/print.css`, plus `beforePrint()` in `web/app.js`, which redraws
+  the charts at print size
+- Norms: `data/norms.csv` (keep the same columns), then rebuild. The tests check it
+  against the PDF values in `tests/golden_norms.csv`, so new norms also need new
+  values there, in the numbers hard-coded in `tests/test_scoring.R` (sample sizes,
+  worked example), and in "about 278,000" and the citation in `R/tipi_text.R`.

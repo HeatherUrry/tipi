@@ -39,7 +39,7 @@
     if (x.length === 2) return x[0] + " and " + x[1];
     return x.slice(0, -1).join(", ") + ", and " + x[x.length - 1];
   }
-  function currentMessage() {   // same wording as missing_message() in app/tipi_text.R
+  function currentMessage() {   // the "not finished yet" message (wording lives here)
     var fields = [], items = missingItems(), parts = [];
     if ($("age").value === "") fields.push("age");
     if ($("gender").value === "") fields.push("gender");
@@ -134,8 +134,8 @@
   }
 
   // ---- Spider chart ----------------------------------------------------------------
-  // Same design as plot_radar() in app/tipi_plots.R: 0 at the centre, 100 at
-  // the rim, dashed ring at the 50th percentile, labels sized to fit.
+  // 0 at the centre, 100 at the rim, dashed ring at the 50th percentile, labels
+  // sized to fit (same design as the retired Shinylive version's R chart).
   function labelLines(trait, pos, narrow) {
     var sp = trait.indexOf(" ");
     var split = sp > 0 ? [trait.slice(0, sp), trait.slice(sp + 1)] : [trait];
@@ -225,7 +225,8 @@
   }
 
   // ---- Percentile strips -----------------------------------------------------------
-  // Same design as plot_strips() in app/tipi_plots.R.
+  // One strip per trait, marked at the band cutoffs (same design as the retired
+  // Shinylive version's R chart).
   function drawStrips(box, rows, W) {
     var fs = W < 480 ? 13 : 15, suffix = " percentile";
     function fits(f, suf) {
